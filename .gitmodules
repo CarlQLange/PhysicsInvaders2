@@ -1,0 +1,3 @@
+[submodule "cslib"]
+	path = cslib
+	url = git://github.com/CarlQLange/cslib.git
