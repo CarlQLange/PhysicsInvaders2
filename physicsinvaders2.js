@@ -172,11 +172,11 @@
     };
 
     Pixel.prototype.x = function() {
-      return this.bodyDef.position.x;
+      return this.body.position.x;
     };
 
     Pixel.prototype.y = function() {
-      return this.bodyDef.position.y;
+      return this.body.position.y;
     };
 
     return Pixel;

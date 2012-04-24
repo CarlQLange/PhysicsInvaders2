@@ -109,7 +109,7 @@ class Sprite
 	constructor: (sp, @x, @y) ->
 		@pixels = []
 		#this is ugly but whatever bro
-		((if val == 1 then @pixels.push({p:new Pixel(),x:x,y:y})) for val, x in li for li, y in sp)
+		((if val is 1 then @pixels.push({p:new Pixel(),x:x,y:y})) for val, x in li for li, y in sp)
 	
 	addToWorld: () ->
 		for pi in @pixels
@@ -134,5 +134,5 @@ class Pixel
 		@fixture = @body.CreateFixture(@fixDef)
 
 	#for drawing, later
-	x: -> @bodyDef.position.x
-	y: -> @bodyDef.position.y
+	x: -> @body.position.x
+	y: -> @body.position.y
