@@ -23,7 +23,7 @@ window.main = () ->
 	initDebugDraw()
 
 	#for now let's just throw in a few boxes to make sure physics is working
-	times 20, ->
+	times 200, ->
 		fixDef = new b2FixtureDef
 		fixDef.density = 1.0
 		fixDef.friction = 0.5
@@ -38,13 +38,15 @@ window.main = () ->
 
 	gameloop = () ->
 		world.Step 1/FPS, 10, 10
+		world.ClearForces();
 		world.DrawDebugData()
 
 	every 1/FPS, ->
+		if W.DEBUG_RESET is true then W.location = W.location
 		gameloop() unless W.DEBUG_PAUSE
 
 initWorld = () ->
-	world = new b2World( new b2Vec2(0, 10), true )
+	world = new b2World( new b2Vec2(0, 100), true )
 
 	#ground
 	fixDef = new b2FixtureDef

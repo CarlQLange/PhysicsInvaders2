@@ -31,7 +31,7 @@
     ctx.fillRect(0, 0, w, h);
     initWorld();
     initDebugDraw();
-    times(20, function() {
+    times(200, function() {
       var bodyDef, fixDef;
       fixDef = new b2FixtureDef;
       fixDef.density = 1.0;
@@ -47,16 +47,18 @@
     });
     gameloop = function() {
       world.Step(1 / FPS, 10, 10);
+      world.ClearForces();
       return world.DrawDebugData();
     };
     return every(1 / FPS, function() {
+      if (W.DEBUG_RESET === true) W.location = W.location;
       if (!W.DEBUG_PAUSE) return gameloop();
     });
   };
 
   initWorld = function() {
     var bodyDef, fixDef;
-    world = new b2World(new b2Vec2(0, 10), true);
+    world = new b2World(new b2Vec2(0, 100), true);
     fixDef = new b2FixtureDef;
     fixDef.density = 1.0;
     fixDef.friction = 0.5;
