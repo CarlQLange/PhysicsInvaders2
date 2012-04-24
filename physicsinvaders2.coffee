@@ -27,9 +27,8 @@ window.main = () ->
 	initWorld()
 	initDebugDraw()
 
-	times 5, ->
-		new Invader(Math.random() * 400, Math.random() * 400)
-	
+	#times 5, ->
+	new Invader(Math.random() * 400, Math.random() * 400)
 
 	gameloop = () ->
 		world.Step 1/FPS, 10, 10
@@ -95,7 +94,15 @@ class Invader
 	        [ 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1 ]
 	        [ 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1 ]
 	        [ 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0 ]
-		], @x, @y).addToWorld()
+		], @x, @y)
+		@sp.addToWorld()
+
+		every 1/FPS, =>
+			for pi in @sp.pixels
+				#debugger
+				
+				#b2Body.ApplyForce(/* b2Vec2 how much */, /* b2Vec2 from where */)
+				pi.p.body.SetLinearVelocity(new b2Vec2(0, 0)) #Don't use this!!
 
 class Sprite
 	# de facto PixelManager
@@ -123,7 +130,8 @@ class Pixel
 	addToWorld: (x, y) ->
 		@bodyDef.position.x = x
 		@bodyDef.position.y = y
-		world.CreateBody(@bodyDef).CreateFixture(@fixDef)
+		@body = world.CreateBody(@bodyDef)
+		@fixture = @body.CreateFixture(@fixDef)
 
 	#for drawing, later
 	x: -> @bodyDef.position.x

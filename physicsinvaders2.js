@@ -38,9 +38,7 @@
     ctx.fillRect(0, 0, w, h);
     initWorld();
     initDebugDraw();
-    times(5, function() {
-      return new Invader(Math.random() * 400, Math.random() * 400);
-    });
+    new Invader(Math.random() * 400, Math.random() * 400);
     gameloop = function() {
       world.Step(1 / FPS, 10, 10);
       world.ClearForces();
@@ -94,9 +92,21 @@
   Invader = (function() {
 
     function Invader(x, y) {
+      var _this = this;
       this.x = x;
       this.y = y;
-      this.sp = new Sprite([[0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0], [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0], [0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0], [0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1], [1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1], [0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0]], this.x, this.y).addToWorld();
+      this.sp = new Sprite([[0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0], [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0], [0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0], [0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1], [1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1], [0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0]], this.x, this.y);
+      this.sp.addToWorld();
+      every(1 / FPS, function() {
+        var pi, _i, _len, _ref3, _results;
+        _ref3 = _this.sp.pixels;
+        _results = [];
+        for (_i = 0, _len = _ref3.length; _i < _len; _i++) {
+          pi = _ref3[_i];
+          _results.push(pi.p.body.SetLinearVelocity(new b2Vec2(0, 0)));
+        }
+        return _results;
+      });
     }
 
     return Invader;
@@ -157,7 +167,8 @@
     Pixel.prototype.addToWorld = function(x, y) {
       this.bodyDef.position.x = x;
       this.bodyDef.position.y = y;
-      return world.CreateBody(this.bodyDef).CreateFixture(this.fixDef);
+      this.body = world.CreateBody(this.bodyDef);
+      return this.fixture = this.body.CreateFixture(this.fixDef);
     };
 
     Pixel.prototype.x = function() {
