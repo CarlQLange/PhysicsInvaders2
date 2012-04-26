@@ -27,8 +27,8 @@ window.main = () ->
 	initWorld()
 	initDebugDraw()
 
-	#times 5, ->
-	new Invader(Math.random() * 400, Math.random() * 400)
+	times 5, ->
+		new Invader(Math.random() * 400, Math.random() * 400)
 
 	gameloop = () ->
 		world.Step 1/FPS, 10, 10
@@ -85,6 +85,7 @@ initDebugDraw = () ->
 
 class Invader
 	constructor: (@x,@y) ->
+		@destroyed = false
 		@sp = new Sprite([
 			[ 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0 ]
 	        [ 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 ]
@@ -94,19 +95,20 @@ class Invader
 	        [ 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1 ]
 	        [ 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1 ]
 	        [ 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0 ]
-		], @x, @y)
+		], @x, @y, -1)
 		@sp.addToWorld()
 
 		every 1/FPS, =>
+			if @destroyed is true then return
 			for pi in @sp.pixels
-				#debugger
-				
 				#b2Body.ApplyForce(/* b2Vec2 how much */, /* b2Vec2 from where */)
 				pi.p.body.SetLinearVelocity(new b2Vec2(0, 0)) #Don't use this!!
+				if pi.p.body.GetContactList()? and destroyed is false
+					if pi.p.body.GetContactList().contact.IsTouching() then pi.p.body.m_fixtureList.m_filter.groupIndex = 1 and destroyed = true
 
 class Sprite
 	# de facto PixelManager
-	constructor: (sp, @x, @y) ->
+	constructor: (sp, @x, @y, @group) ->
 		@pixels = []
 		#this is ugly but whatever bro
 		((if val is 1 then @pixels.push({p:new Pixel(),x:x,y:y})) for val, x in li for li, y in sp)

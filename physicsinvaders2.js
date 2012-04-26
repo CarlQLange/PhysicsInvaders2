@@ -38,7 +38,9 @@
     ctx.fillRect(0, 0, w, h);
     initWorld();
     initDebugDraw();
-    new Invader(Math.random() * 400, Math.random() * 400);
+    times(5, function() {
+      return new Invader(Math.random() * 400, Math.random() * 400);
+    });
     gameloop = function() {
       world.Step(1 / FPS, 10, 10);
       world.ClearForces();
@@ -95,15 +97,26 @@
       var _this = this;
       this.x = x;
       this.y = y;
-      this.sp = new Sprite([[0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0], [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0], [0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0], [0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1], [1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1], [0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0]], this.x, this.y);
+      this.destroyed = false;
+      this.sp = new Sprite([[0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0], [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0], [0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0], [0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1], [1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1], [0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0]], this.x, this.y, -1);
       this.sp.addToWorld();
       every(1 / FPS, function() {
-        var pi, _i, _len, _ref3, _results;
+        var destroyed, pi, _i, _len, _ref3, _results;
+        if (_this.destroyed === true) return;
         _ref3 = _this.sp.pixels;
         _results = [];
         for (_i = 0, _len = _ref3.length; _i < _len; _i++) {
           pi = _ref3[_i];
-          _results.push(pi.p.body.SetLinearVelocity(new b2Vec2(0, 0)));
+          pi.p.body.SetLinearVelocity(new b2Vec2(0, 0));
+          if ((pi.p.body.GetContactList() != null) && destroyed === false) {
+            if (pi.p.body.GetContactList().contact.IsTouching()) {
+              _results.push(pi.p.body.m_fixtureList.m_filter.groupIndex = 1 && (destroyed = true));
+            } else {
+              _results.push(void 0);
+            }
+          } else {
+            _results.push(void 0);
+          }
         }
         return _results;
       });
@@ -115,10 +128,11 @@
 
   Sprite = (function() {
 
-    function Sprite(sp, x, y) {
+    function Sprite(sp, x, y, group) {
       var li, val, _len, _len2;
       this.x = x;
       this.y = y;
+      this.group = group;
       this.pixels = [];
       for (y = 0, _len = sp.length; y < _len; y++) {
         li = sp[y];
