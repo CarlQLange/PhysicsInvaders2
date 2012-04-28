@@ -1,5 +1,5 @@
 (function() {
-  var FPS, Invader, PIXEL_SCALE, Pixel, Sprite, W, b2AABB, b2Body, b2BodyDef, b2CircleShape, b2DebugDraw, b2Fixture, b2FixtureDef, b2MassData, b2PolygonShape, b2Vec2, b2World, h, initDebugDraw, initWorld, w, world, _ref, _ref2;
+  var Bullet, FPS, Invader, PIXEL_SCALE, Pixel, Sprite, W, b2AABB, b2Body, b2BodyDef, b2CircleShape, b2DebugDraw, b2Fixture, b2FixtureDef, b2MassData, b2PolygonShape, b2Vec2, b2World, h, initDebugDraw, initWorld, w, world, _ref, _ref2;
 
   b2Vec2 = Box2D.Common.Math.b2Vec2;
 
@@ -29,7 +29,7 @@
   });
 
   window.main = function() {
-    var cnv, ctx, gameloop;
+    var b, cnv, ctx, gameloop, invaders;
     cnv = document.getElementById("cnv");
     ctx = cnv.getContext('2d');
     w = cnv.width;
@@ -38,13 +38,24 @@
     ctx.fillRect(0, 0, w, h);
     initWorld();
     initDebugDraw();
-    times(5, function() {
+    invaders = times(5, function() {
       return new Invader(Math.random() * 400, Math.random() * 400);
     });
+    b = new Bullet(250, 600);
     gameloop = function() {
+      var i, invader, _i, _j, _len, _len2;
       world.Step(1 / FPS, 10, 10);
       world.ClearForces();
-      return world.DrawDebugData();
+      world.DrawDebugData();
+      for (_i = 0, _len = invaders.length; _i < _len; _i++) {
+        invader = invaders[_i];
+        invader.update();
+      }
+      for (_j = 0, _len2 = invaders.length; _j < _len2; _j++) {
+        i = invaders[_j];
+        if (i.hitCheck(b.aabb)) i.asplode();
+      }
+      return b.update();
     };
     return every(1 / FPS, function() {
       if (W.DEBUG_RESET) W.location = W.location;
@@ -91,36 +102,66 @@
     return world.SetDebugDraw(debugDraw);
   };
 
+  Bullet = (function() {
+
+    function Bullet(x, y) {
+      this.x = x;
+      this.y = y;
+      this.sp = new Sprite([[1], [1], [1]], this.x, this.y);
+      this.sp.addToWorld();
+      this.aabb = new b2AABB;
+      this.aabb.upperBound = new b2Vec2(this.x, this.y);
+      this.aabb.lowerBound = new b2Vec2(this.x + 1 * PIXEL_SCALE, this.y + 3 * PIXEL_SCALE);
+    }
+
+    Bullet.prototype.update = function() {
+      var p, _i, _len, _ref3, _results;
+      _ref3 = this.sp.pixels;
+      _results = [];
+      for (_i = 0, _len = _ref3.length; _i < _len; _i++) {
+        p = _ref3[_i];
+        _results.push(p.p.body.SetLinearVelocity(new b2Vec2(0, -100)));
+      }
+      return _results;
+    };
+
+    return Bullet;
+
+  })();
+
   Invader = (function() {
 
     function Invader(x, y) {
-      var _this = this;
       this.x = x;
       this.y = y;
       this.destroyed = false;
-      this.sp = new Sprite([[0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0], [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0], [0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0], [0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1], [1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1], [0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0]], this.x, this.y, -1);
+      this.sp = new Sprite([[0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0], [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0], [0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0], [0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1], [1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1], [0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0]], this.x, this.y);
       this.sp.addToWorld();
-      every(1 / FPS, function() {
-        var destroyed, pi, _i, _len, _ref3, _results;
-        if (_this.destroyed === true) return;
-        _ref3 = _this.sp.pixels;
+      this.aabb = new b2AABB;
+      this.aabb.upperBound = new b2Vec2(this.x, this.y);
+      this.aabb.lowerBound = new b2Vec2(this.x + 12 * PIXEL_SCALE, this.y + 7 * PIXEL_SCALE);
+    }
+
+    Invader.prototype.update = function() {
+      var p, _i, _len, _ref3, _results;
+      if (!this.destroyed) {
+        _ref3 = this.sp.pixels;
         _results = [];
         for (_i = 0, _len = _ref3.length; _i < _len; _i++) {
-          pi = _ref3[_i];
-          pi.p.body.SetLinearVelocity(new b2Vec2(0, 0));
-          if ((pi.p.body.GetContactList() != null) && destroyed === false) {
-            if (pi.p.body.GetContactList().contact.IsTouching()) {
-              _results.push(pi.p.body.m_fixtureList.m_filter.groupIndex = 1 && (destroyed = true));
-            } else {
-              _results.push(void 0);
-            }
-          } else {
-            _results.push(void 0);
-          }
+          p = _ref3[_i];
+          _results.push(p.p.body.SetLinearVelocity(new b2Vec2(0, -1)));
         }
         return _results;
-      });
-    }
+      }
+    };
+
+    Invader.prototype.hitCheck = function(bulletAABB) {
+      return this.aabb.Contains(bulletAABB);
+    };
+
+    Invader.prototype.asplode = function() {
+      return this.destroyed = true;
+    };
 
     return Invader;
 
@@ -128,11 +169,10 @@
 
   Sprite = (function() {
 
-    function Sprite(sp, x, y, group) {
+    function Sprite(sp, x, y) {
       var li, val, _len, _len2;
       this.x = x;
       this.y = y;
-      this.group = group;
       this.pixels = [];
       for (y = 0, _len = sp.length; y < _len; y++) {
         li = sp[y];
@@ -182,7 +222,8 @@
       this.bodyDef.position.x = x;
       this.bodyDef.position.y = y;
       this.body = world.CreateBody(this.bodyDef);
-      return this.fixture = this.body.CreateFixture(this.fixDef);
+      this.fixture = this.body.CreateFixture(this.fixDef);
+      return this;
     };
 
     Pixel.prototype.x = function() {

@@ -12,6 +12,7 @@ world = null
 w = h = null
 PIXEL_SCALE = 3 #how large are the pixels?
 
+
 document.body.addEventListener 'keydown', (event) ->
 	if event.which is 80 then W.DEBUG_PAUSE ^= true #cool way to swap a boolean
 	if event.which is 79 then W.DEBUG_RESET ^= true #didn't know about that before
@@ -27,13 +28,25 @@ window.main = () ->
 	initWorld()
 	initDebugDraw()
 
-	times 5, ->
+	invaders = times 5, ->
 		new Invader(Math.random() * 400, Math.random() * 400)
+
+	#after 3000, ->
+	#	(invader.asplode() for invader in invaders)
+	#after 1000, ->
+	b =	new Bullet(250,600)
 
 	gameloop = () ->
 		world.Step 1/FPS, 10, 10
 		world.ClearForces();
 		world.DrawDebugData()
+		(invader.update() for invader in invaders)
+		for i in invaders
+			if i.hitCheck(b.aabb) 
+				i.asplode()
+
+		#remember to remove this
+		b.update()
 
 	#replace this with requestAnimationFrame
 	every 1/FPS, ->
@@ -83,6 +96,21 @@ initDebugDraw = () ->
 	debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_jointBit)
 	world.SetDebugDraw(debugDraw)
 
+class Bullet
+	constructor: (@x, @y) ->
+		@sp = new Sprite([
+			[ 1 ]
+			[ 1 ]
+			[ 1 ]
+		], @x, @y)
+		@sp.addToWorld()
+		@aabb = new b2AABB
+		@aabb.upperBound = new b2Vec2(@x, @y)
+		@aabb.lowerBound = new b2Vec2(@x + 1*PIXEL_SCALE, @y + 3*PIXEL_SCALE)	
+
+	update: () ->
+		(p.p.body.SetLinearVelocity(new b2Vec2(0, -100)) for p in @sp.pixels)
+
 class Invader
 	constructor: (@x,@y) ->
 		@destroyed = false
@@ -95,20 +123,24 @@ class Invader
 	        [ 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1 ]
 	        [ 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1 ]
 	        [ 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0 ]
-		], @x, @y, -1)
+		], @x, @y)
 		@sp.addToWorld()
+		@aabb = new b2AABB
+		@aabb.upperBound = new b2Vec2(@x, @y)
+		@aabb.lowerBound = new b2Vec2(@x + 12*PIXEL_SCALE, @y + 7*PIXEL_SCALE)
 
-		every 1/FPS, =>
-			if @destroyed is true then return
-			for pi in @sp.pixels
-				#b2Body.ApplyForce(/* b2Vec2 how much */, /* b2Vec2 from where */)
-				pi.p.body.SetLinearVelocity(new b2Vec2(0, 0)) #Don't use this!!
-				if pi.p.body.GetContactList()? and destroyed is false
-					if pi.p.body.GetContactList().contact.IsTouching() then pi.p.body.m_fixtureList.m_filter.groupIndex = 1 and destroyed = true
+	update: () ->
+		(p.p.body.SetLinearVelocity(new b2Vec2(0, -1)) for p in @sp.pixels) unless @destroyed
+
+	hitCheck: (bulletAABB) ->
+		@aabb.Contains bulletAABB
+
+	asplode: () ->
+		@destroyed = true
 
 class Sprite
 	# de facto PixelManager
-	constructor: (sp, @x, @y, @group) ->
+	constructor: (sp, @x, @y) ->
 		@pixels = []
 		#this is ugly but whatever bro
 		((if val is 1 then @pixels.push({p:new Pixel(),x:x,y:y})) for val, x in li for li, y in sp)
@@ -134,6 +166,7 @@ class Pixel
 		@bodyDef.position.y = y
 		@body = world.CreateBody(@bodyDef)
 		@fixture = @body.CreateFixture(@fixDef)
+		@
 
 	#for drawing, later
 	x: -> @body.position.x
